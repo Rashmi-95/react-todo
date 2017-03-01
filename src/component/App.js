@@ -2,100 +2,45 @@ import React, { Component } from 'react';
 import Head from './Head.js'
 import ItemList from './ItemList.js'
 import Foot from './Foot.js'
-import axios from 'axios'
+import api from './api.js'
+
 class App extends Component {
   constructor(props) {
     super(props);
-    const data = [
-      { "id": 1223, "description": "asdasd", "status": false },
-      { "id": 1224, "description": "asdasd", "status": true },
-      { "id": 1225, "description": "asdasd", "status": true },
-      { "id": 1226, "description": ",mnaksjnd", "status": true }]
-    let todo = {}
-    data.forEach((item) => {
-      todo[item.id] = item
-    })
     this.state = {
-      todos: todo
+      todos: {}
     }
   }
-  componentWillMount() {
-    axios.get('http://localhost:3007/read/')
-      .then((response) => {
-        let todoObjects = response.data;
-        todoObjects.forEach(function (item) {
-          todoObjects[item.id] = item
-        })
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+  componentDidMount() {
+    api.returnTodo(this)
   }
   checkAll(checkValue) {
-    let newTodos = this.state.todos
-    for (let key in newTodos) {
-      newTodos[key].status = checkValue
-    }
-    this.setState({ todos: newTodos })
+    api.checkAllApiCall(this, this.state.todos, checkValue)
   }
   addItem(newValue) {
-    console.log('addItem', newValue);
-    let newTodos = this.state.todos
-    newTodos[700] = { "id": 700, "description": newValue, "status": false }
-    this.setState({ todos: newTodos })
+    api.addItemApiCall(this, this.state.todos, newValue)
   }
 
   deleteItem(key) {
-    console.log('delete item');
-    let newTodos = this.state.todos
-    delete (newTodos[key])
-    this.setState({ todos: newTodos })
+    api.deleteItemApiCall(this, this.state.todos, key)
   }
-  updateItem(key, content) {
-    console.log('update item');
-    let newTodos = this.state.todos
-    newTodos[key].description = content
-    this.setState({ todos: newTodos })
+  updateItem(key, content, oldContent) {
+    if (content.trim() === '')
+      api.deleteItemApiCall(this, this.state.todos, key)
+    else
+      api.updateItemApiCall(this, this.state.todos, key, content, oldContent)
   }
 
   checkItem(key) {
-    console.log('check item', key);
-    let newTodos = this.state.todos
-    newTodos[key].status = !newTodos[key].status
-    this.setState({ todos: newTodos })
+    api.checkItemApiCall(this, this.state.todos, key)
   }
 
   deleteCompleted() {
-    console.log('delete completed');
-    let newTodos = this.state.todos
-    for (let key in newTodos) {
-      if (newTodos[key].status === true) {
-        delete (newTodos[key])
-      }
-    }
-    this.setState({ todos: newTodos })
-    console.log(this.state.todos)
+    api.deleteCompletedApiCall(this, this.state.todos)
   }
-  filterList(todos, status) {
-    let filteredList = {}
-    for (let key in todos) {
-      if (todos[key].status === status) {
-        filteredList[key] = todos[key]
-      }
-    }
-    return filteredList
-  }
+
   render() {
-    let filteredTodos
-    console.log(this.props.params.category);
-    switch (this.props.params.category) {
-      case 'active': filteredTodos = this.filterList(this.state.todos, false)
-        break
-      case 'completed': filteredTodos = this.filterList(this.state.todos, true)
-        break
-      default: filteredTodos = this.state.todos
-    }
-    console.log(filteredTodos);
+    let filteredTodos = api.filterListOnRoute(this.props.params.category, this.state.todos)
     return (
       <div>
         <div className="todoapp" >
@@ -124,4 +69,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default App
